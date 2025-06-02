@@ -43,3 +43,25 @@ export const createTenant = async (req:Request, res: Response) => {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 }
+
+export const updateTentant = async (req:Request, res: Response) => {  
+     try {
+        const { cognitoId } = req.params;
+        const {  name, email,phoneNumber } = req.body;
+        const updatedTenant = await prisma.tenant.update({
+            where: {
+                cognitoId: cognitoId
+            },
+            data:  {
+                
+                name: name,
+                email: email,
+                phoneNumber: phoneNumber
+            }
+        })
+
+        res.status(201).json(updatedTenant);
+    } catch (error:any) {
+        res.status(500).json({ message: "Internal updating tenant server error", error: error.message });
+    }
+  }

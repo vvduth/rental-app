@@ -6,17 +6,17 @@ import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
-    prepareHeaders : async (headers) => {
+    prepareHeaders: async (headers) => {
       const session = await fetchAuthSession();
       const { idToken } = session.tokens ?? {};
       if (idToken) {
         headers.set("Authorization", `Bearer ${idToken}`);
       }
       return headers;
-    }
+    },
   }),
   reducerPath: "api",
-  tagTypes: [],
+  tagTypes: ["Tenants", "Managers"],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
@@ -34,31 +34,59 @@ export const api = createApi({
           let userDetailsResponse = await fetchWithBQ(endpoint);
 
           // if user not exists, create new user
-          if (userDetailsResponse.error && userDetailsResponse.error.status === 404) {
+          if (
+            userDetailsResponse.error &&
+            userDetailsResponse.error.status === 404
+          ) {
             userDetailsResponse = await createNewUserInDatabase(
-              user, 
+              user,
               idToken,
-              userRole, 
+              userRole,
               fetchWithBQ
-            )
+            );
           }
 
           return {
             data: {
-              cognitoInfo: {...user},
+              cognitoInfo: { ...user },
               userInfo: userDetailsResponse.data as Tenant | Manager,
               userRole: userRole,
-            }
-          }
-        } catch (error:any) {
+            },
+          };
+        } catch (error: any) {
           return {
-            error: error.message || "Failed to fetch user details",}
+            error: error.message || "Failed to fetch user details",
+          };
         }
       },
+    }),
+    updateTenantSettings: build.mutation<
+      Tenant,
+      { cognitoId: string } & Partial<Tenant>
+    >({
+      query: ({ cognitoId, ...updatedTenant }) => ({
+        url: `tenants/${cognitoId}`,
+        method: "PUT",
+        body: updatedTenant,
+      }),
+      invalidatesTags: (result) => [{ type: "Tenants", id: result?.id }],
+    }),
+    updateManagerSettings: build.mutation<
+      Tenant,
+      { cognitoId: string } & Partial<Manager>
+    >({
+      query: ({ cognitoId, ...updatedTenant }) => ({
+        url: `managers/${cognitoId}`,
+        method: "PUT",
+        body: updatedTenant,
+      }),
+      invalidatesTags: (result) => [{ type: "Managers", id: result?.id }],
     }),
   }),
 });
 
 export const {
-  useGetAuthUserQuery, 
+  useGetAuthUserQuery,
+  useUpdateTenantSettingsMutation,
+  useUpdateManagerSettingsMutation,
 } = api;

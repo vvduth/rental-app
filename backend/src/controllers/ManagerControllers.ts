@@ -40,3 +40,24 @@ export const createManager = async (req:Request, res: Response) => {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 }
+
+export const updateManager = async (req:Request, res: Response) => {
+     try {
+        const { cognitoId } = req.params;
+        const {  name, email,phoneNumber } = req.body;
+        const updatedManager = await prisma.manager.update({
+            where: {
+                cognitoId: cognitoId
+            },
+            data:  {
+                name: name,
+                email: email,
+                phoneNumber: phoneNumber
+            }
+        })
+
+        res.status(200).json(updatedManager);
+    } catch (error:any) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+}
