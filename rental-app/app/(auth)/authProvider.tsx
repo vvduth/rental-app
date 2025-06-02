@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Amplify } from "aws-amplify";
 
-import { Authenticator, Heading, Radio, RadioGroupField, useAuthenticator, View } from "@aws-amplify/ui-react";
+import {
+  Authenticator,
+  Heading,
+  Radio,
+  RadioGroupField,
+  useAuthenticator,
+  View,
+} from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
+import { usePathname, useRouter } from "next/navigation";
 
 Amplify.configure({
   Auth: {
@@ -18,21 +26,18 @@ const components = {
   Header() {
     return (
       <View className="mt-4 mb-7">
-          <Heading level={3}
-           className="!text-2xl !font-bold" >
-            RENT
-            <span className="text-rose-500 font-light hover:text-teal-500">
-              APP
-            </span>
-            <p className="mt-2">
-              <span className="font-bold">
-                Welcome!
-              </span>
-              Please sign in to continue.
-            </p>
-           </Heading>
+        <Heading level={3} className="!text-2xl !font-bold">
+          RENT
+          <span className="text-rose-500 font-light hover:text-teal-500">
+            APP
+          </span>
+          <p className="mt-2">
+            <span className="font-bold">Welcome!</span>
+            Please sign in to continue.
+          </p>
+        </Heading>
       </View>
-    )
+    );
   },
   SignIn: {
     Footer() {
@@ -51,11 +56,11 @@ const components = {
           </p>
         </View>
       );
-    }
+    },
   },
   SignUp: {
     FormFields() {
-      const {validationErrors} = useAuthenticator()
+      const { validationErrors } = useAuthenticator();
       return (
         <>
           <Authenticator.SignUp.FormFields />
@@ -70,7 +75,7 @@ const components = {
             <Radio value="manager">Manager</Radio>
           </RadioGroupField>
         </>
-      )
+      );
     },
     Footer() {
       const { toSignIn } = useAuthenticator();
@@ -88,9 +93,9 @@ const components = {
           </p>
         </View>
       );
-    }
-  }
-}
+    },
+  },
+};
 
 const formFields = {
   signIn: {
@@ -134,16 +139,33 @@ const formFields = {
 };
 
 const Auth = ({ children }: { children: React.ReactNode }) => {
-  const {user} = useAuthenticator((context) => [context.user]);
+  const { user } = useAuthenticator((context) => [context.user]);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const isAuthPage = pathname.match(/^\/(signin|signup)$/);
+  const isDashboardPage =
+    pathname.startsWith("/manager") || pathname.startsWith("/tenants");
+  
+  useEffect(() => {
+    if (user && isAuthPage) {
+      router.push("/")
+    }
+  },[user, isAuthPage, router]);
+
+  // alllow acces to public pages without authentication
+  if (!isAuthPage && !isDashboardPage) {
+    return <>{children}</>;
+  }
   return (
     <div className="h-full">
-      <Authenticator
-       components={components}
-       formFields={formFields}
-      >{() => <>{children}</>}</Authenticator>
+      <Authenticator 
+        initialState={pathname.includes("signup") ? "signUp" : "signIn"}
+      components={components} formFields={formFields}>
+        {() => <>{children}</>}
+      </Authenticator>
     </div>
   );
 };
-
 
 export default Auth;
