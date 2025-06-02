@@ -1,2 +1,26 @@
 asset-download
 
+**/node_modules/
+**/dist/
+
+.env
+rental-app/.env.local
+rental-app/.env.development
+rental-app/.env.production
+backend/.env
+
+rental-app/.next/
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+
+rental-app/node_modules/
+backend/node_modules/
+rental-app/dist/
+backend/dist/
+rental-app/.env
+backend/.env
+rental-app/.next/
+node_modules
