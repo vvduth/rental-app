@@ -71,7 +71,7 @@ const components = {
             hasError={!!validationErrors?.["custom:role"]}
             isRequired
           >
-            <Radio value="tentant">Tentant</Radio>
+            <Radio value="tenant">Tenant</Radio>
             <Radio value="manager">Manager</Radio>
           </RadioGroupField>
         </>
