@@ -1,10 +1,13 @@
 "use client";
 import { NAVBAR_HEIGHT } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cleanParams, cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { useSearchParams } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import FiltersBar from "./FiltersBar";
+import FiltersFull from "./FiltersFull";
+import { setFilters } from "@/state";
+import Map from "./Map";
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
@@ -12,6 +15,24 @@ const SearchPage = () => {
   const isFiltersFullOpen = useAppSelector(
     (state) => state.global.isFiltersFullOpen
   );
+
+  useEffect(() => {
+    const initialFilter = Array.from(searchParams.entries()).reduce(
+      (acc: any, [key, value]) => {
+        if (key === "priceRange" || key === "squareFeet") {
+          acc[key] = value.split(",").map((v) => (v === "" ? null : Number(v)));
+        } else if (key === "coordinates") {
+          acc[key] = value.split(",").map(Number);
+        } else {
+          acc[key] = value === "any" ? null : value;
+        }
+        return acc;
+      },
+      {}
+    );
+    const cleanedFilters  = cleanParams(initialFilter);
+    dispatch(setFilters(cleanedFilters))
+  }, []);
   return (
     <div
       className="w-full mx-auto px-5 flex flex-col"
@@ -30,9 +51,9 @@ const SearchPage = () => {
               : "w-0 opacity-0 invisible"
           )}
         >
-            {/* filter full */}
+          <FiltersFull />
         </div>
-        {/* map */}
+        <Map/>
         <div className="basis-4/12 overflow-y-auto"></div>
       </div>
     </div>
