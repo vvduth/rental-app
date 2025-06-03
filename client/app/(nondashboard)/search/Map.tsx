@@ -44,7 +44,7 @@ const Map = () => {
     resizeMap();
 
     return () => map.remove();
-  });
+  },[ isLoading, isError, properties, filters.coordinates]);
   if (isLoading) return <div>Loading...</div>;
     if (isError || !properties) return <div>Error loading map</div>;
 
