@@ -1,11 +1,16 @@
 import Card from '@/components/Card'
-import { useAddFavoritePropertyMutation, useGetAuthUserQuery, useGetPropertiesQuery, useRemoveFavoritePropertyMutation } from '@/state/api'
+import { useAddFavoritePropertyMutation, useGetAuthUserQuery, useGetPropertiesQuery, useGetTenantQuery, useRemoveFavoritePropertyMutation } from '@/state/api'
 import { useAppSelector } from '@/state/redux'
 import { Property } from '@/types/prismaTypes'
 import React from 'react'
 
 const Listings = () => {
     const {data:authUser} = useGetAuthUserQuery()
+    const {data: tenant} = useGetTenantQuery(
+        authUser?.cognitoInfo.userId || '',{
+            skip: !authUser?.cognitoInfo.userId,
+        }
+    )
     const[addFav] = useAddFavoritePropertyMutation()
     const [removeFav] = useRemoveFavoritePropertyMutation()
     const viewMode = useAppSelector((state) => state.global.viewMode)
@@ -19,7 +24,7 @@ const Listings = () => {
 
     const handleFavoriteToggle = async (propertyId: number) => {
         if (!authUser) return 
-        const isFavorite = authUser.userInfo.favorites.some(
+        const isFavorite = tenant?.favorites.some(
             (fav: Property) => fav.id === propertyId
         )
         if (isFavorite) {
@@ -50,7 +55,7 @@ const Listings = () => {
                         <Card 
                             key={property.id}
                             property={property}
-                            isFavorite={authUser?.userInfo.favorites.some((fav:Property) => fav.id === property.id) || false}
+                            isFavorite={tenant?.favorites.some((fav:Property) => fav.id === property.id) || false}
                             onFavoriteToggle={() => handleFavoriteToggle(property.id)}
 
                         />

@@ -166,4 +166,5 @@ export const {
   useGetPropertiesQuery,
   useAddFavoritePropertyMutation,
   useRemoveFavoritePropertyMutation,
+  useGetTenantQuery,
 } = api;
