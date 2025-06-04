@@ -69,6 +69,29 @@ const FiltersBar = () => {
     dispatch(setFilters(newFilters));
     updateURL(newFilters);
   };
+
+  const handleLocationSearch = async () => {
+    try {
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          searchInput
+        )}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY!}&fuzzyMatch=true`
+      );
+
+      const data = await res.json();
+
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        dispatch(
+          setFilters({
+            location: searchInput,
+            coordinates: [lng, lat],
+          }))
+      }
+    } catch (error) {
+      console.error("Error fetching location data:", error);
+    }
+  };
   return (
     <div className="flex justify-between items-center w-full py-5">
       {/* filters */}
@@ -96,6 +119,10 @@ const FiltersBar = () => {
           />
           <Button
             //onClick={handleLocationSearch}
+            onClick={() => {
+              handleLocationSearch();
+              //setSearchInput("");
+            }}
             className={`rounded-r-xl rounded-l-none border-l-none border-primary-400 shadow-none 
               border hover:bg-primary-700 hover:text-primary-50`}
           >

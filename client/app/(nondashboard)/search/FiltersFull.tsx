@@ -2,7 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { AmenityIcons, PropertyTypeIcons } from "@/lib/constants";
 import { cleanParams, cn, formatEnumString } from "@/lib/utils";
@@ -43,13 +49,36 @@ const FiltersFull = () => {
     dispatch(setFilters(localFilter));
     updateURL(localFilter);
   };
-   const handleAmenityChange = (amenity: AmenityEnum) => {
+  const handleAmenityChange = (amenity: AmenityEnum) => {
     setLocalFilter((prev) => ({
       ...prev,
       amenities: prev.amenities.includes(amenity)
         ? prev.amenities.filter((a) => a !== amenity)
         : [...prev.amenities, amenity],
     }));
+  };
+
+  const handleLocationSearch = async () => {
+    try {
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          localFilter.location
+        )}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY!}&fuzzyMatch=true`
+      );
+
+      const data = await res.json();
+
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        setLocalFilter((prev) => ({
+          ...prev,
+          location: data.features[0].place_name,
+          coordinates: [lng, lat],
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching location data:", error);
+    }
   };
   const handleReset = () => {
     setLocalFilter(initialState.filters);
@@ -65,7 +94,7 @@ const FiltersFull = () => {
     <div className="bg-white rounded-lg px-4 h-full overflow-auto pb-10">
       <div className="flex flex-col space-y-6">
         {/* locations */}
-         <div>
+        <div>
           <h4 className="font-bold mb-2">Location</h4>
           <div className="flex items-center">
             <Input
@@ -80,7 +109,7 @@ const FiltersFull = () => {
               className="rounded-l-xl rounded-r-none border-r-0"
             />
             <Button
-              //onClick={handleLocationSearch}
+              onClick={handleLocationSearch}
               className="rounded-r-xl rounded-l-none border-l-none border-black shadow-none border hover:bg-primary-700 hover:text-primary-50"
             >
               <Search className="w-4 h-4" />
@@ -138,7 +167,7 @@ const FiltersFull = () => {
         </div>
 
         {/* bedrooms and bath */}
-         {/* Beds and Baths */}
+        {/* Beds and Baths */}
         <div className="flex gap-4">
           <div className="flex-1">
             <h4 className="font-bold mb-2">Beds</h4>
@@ -181,7 +210,7 @@ const FiltersFull = () => {
           </div>
         </div>
 
-         {/* Square Feet */}
+        {/* Square Feet */}
         <div>
           <h4 className="font-bold mb-2">Square Feet</h4>
           <Slider
@@ -206,7 +235,7 @@ const FiltersFull = () => {
           </div>
         </div>
 
-         {/* Amenities */}
+        {/* Amenities */}
         <div>
           <h4 className="font-bold mb-2">Amenities</h4>
           <div className="flex flex-wrap gap-2">
@@ -231,7 +260,7 @@ const FiltersFull = () => {
         </div>
 
         {/* Available From */}
-         <div>
+        <div>
           <h4 className="font-bold mb-2">Available From</h4>
           <Input
             type="date"

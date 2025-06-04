@@ -1,4 +1,5 @@
 import Card from '@/components/Card'
+import CardCompact from '@/components/CompactCard'
 import { useAddFavoritePropertyMutation, useGetAuthUserQuery, useGetPropertiesQuery, useGetTenantQuery, useRemoveFavoritePropertyMutation } from '@/state/api'
 import { useAppSelector } from '@/state/redux'
 import { Property } from '@/types/prismaTypes'
@@ -59,9 +60,15 @@ const Listings = () => {
                             onFavoriteToggle={() => handleFavoriteToggle(property.id)}
 
                         />
-                    ) :(<>
-                        listcard
-                    </>)
+                    ) :(
+                       <CardCompact
+                            key={property.id}
+                            property={property}
+                            isFavorite={tenant?.favorites.some((fav:Property) => fav.id === property.id) || false}
+                            onFavoriteToggle={() => handleFavoriteToggle(property.id)}
+                        />
+                        
+                    )
                 ))}
             </div>
         </div>
