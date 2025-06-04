@@ -1,8 +1,10 @@
+import { createProperty } from "./../../backend/src/controllers/PropertyControllers";
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
 import { Lease, Manager, Payment, Property, Tenant } from "@/types/prismaTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
+import { result } from "lodash";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -188,10 +190,30 @@ export const api = createApi({
             ]
           : [{ type: "Properties", id: "LIST" }],
     }),
-
+    createProperty: build.mutation<Property, FormData>({
+      query: (propertyData) => ({
+        url: `properties`,
+        method: "POST",
+        body: propertyData,
+      }),
+      invalidatesTags: (result) => [
+        { type: "Properties", id: "LIST" },
+        { type: "Managers", id: result?.manager?.id },
+      ],
+       async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Property created successfully",
+          error: "Failed to create property",
+        });
+       }
+    }),
     // lease related endpoints
     getLeases: build.query<Lease[], number>({
       query: () => `leases`,
+      providesTags: ["Leases"],
+    }),
+    getPropertyLeases: build.query<Lease[], number>({
+      query: (propertyId) => `properties/${propertyId}/leases`,
       providesTags: ["Leases"],
     }),
     getPayment: build.query<Payment, number>({
@@ -214,4 +236,6 @@ export const {
   useGetLeasesQuery,
   useGetPaymentQuery,
   useGetCurrentResidencesQuery,
+  useGetPropertyLeasesQuery,
+  useCreatePropertyMutation
 } = api;
