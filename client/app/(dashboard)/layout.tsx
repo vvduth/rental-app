@@ -19,7 +19,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       if (userRole === "manager" && pathname.startsWith("/tenants") ||
           userRole === "tenant" && pathname.startsWith("/managers")) {
         router.push(
-          userRole === "manager" ? "/managers/properties" : "/tenants/favourites",
+          userRole === "manager" ? "/managers/properties" : "/tenants/favorites",
           {scroll: false}
         )
       } else {

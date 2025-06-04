@@ -1,3 +1,4 @@
+import { createApplication } from './../../backend/src/controllers/applicationControllers';
 import { createProperty } from "./../../backend/src/controllers/PropertyControllers";
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
 import {
@@ -250,6 +251,14 @@ export const api = createApi({
       },
       providesTags: ["Applications"],
     }),
+    createApplication: build.mutation<Application, Partial<Application>>({
+      query: (body) => ({
+        url: "applications",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Applications"],
+    }),
     updateApplicationStatus: build.mutation<
       Application & {lease?: Lease},
       {id: number; status: string; }
@@ -280,5 +289,6 @@ export const {
   useGetPropertyLeasesQuery,
   useCreatePropertyMutation,
   useGetApplicationsQuery,
-  useUpdateApplicationStatusMutation
+  useUpdateApplicationStatusMutation,
+  useCreateApplicationMutation
 } = api;

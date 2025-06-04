@@ -38,7 +38,7 @@ const SidebarCustom = ({ userType }: AppSidebarProps) => {
           { icon: Settings, label: "Leases", href: "/managers/settings" },
         ]
       : [
-          { icon: Heart, label: "My favourites", href: "/tenants/favourites" },
+          { icon: Heart, label: "My favorites", href: "/tenants/favorites" },
           {
             icon: FileText,
             label: "My Applications",

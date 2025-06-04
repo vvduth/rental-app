@@ -7,12 +7,13 @@ import PropertyOverview from "./PropertyOverview";
 import PropertyDetails from "./PropertyDetails";
 import PropertyLocation from "./PropertyLocation";
 import ContactWidget from "./ContactWidget";
+import ApplicationModal from "./ApplicationModal";
 
 const SingleListing = () => {
   const { id } = useParams();
   const propertyId = Number(id);
   const { data: authUser } = useGetAuthUserQuery();
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div>
@@ -29,11 +30,17 @@ const SingleListing = () => {
           <PropertyLocation propertyId={propertyId} />
         </div>
         <div className="order-1 md:order-2">
-            <ContactWidget 
-                onOpenModal = {() => setIsModalOpen(!isModalOpen)}
-            />
+          <ContactWidget onOpenModal={() => setIsModalOpen(!isModalOpen)} />
         </div>
       </div>
+      {authUser &&  (
+        <ApplicationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          propertyId={propertyId}
+          
+        />
+      )}
     </div>
   );
 };

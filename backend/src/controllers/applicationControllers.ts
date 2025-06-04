@@ -147,14 +147,15 @@ export const listApplications = async (
           property: {
             ...application.property,
             address: application.property.location.address,
-            manager: application.property.manager,
+           
+          },
+           manager: application.property.manager,
             lease: lease
               ? {
                   ...lease,
                   nextPaymentDate: calculateNextPaymentDate(lease.startDate),
                 }
               : null,
-          },
         };
       })
     );

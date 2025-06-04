@@ -10,7 +10,7 @@ const ApplicationCard = ({
   const [imgSrc, setImgSrc] = useState(
     application.property.photoUrls?.[0] || "/placeholder.jpg"
   );
-
+ console.log(application)
   const statusColor =
     application.status === "Approved"
       ? "bg-green-500"
@@ -21,11 +21,8 @@ const ApplicationCard = ({
   const contactPerson =
     userType === "manager" ? application.tenant : application.manager;
   return (
-    <div className="borer rounded-xl overflow-hidden shadow-sm bg-white mb-4">
-      <div
-        className="flex flex-col lg:flex-row  items-start lg:items-center 
-        justify-between px-6 md:px-4 py-6 gap-6 lg:gap-4"
-      >
+     <div className="border rounded-xl overflow-hidden shadow-sm bg-white mb-4">
+      <div className="flex flex-col lg:flex-row  items-start lg:items-center justify-between px-6 md:px-4 py-6 gap-6 lg:gap-4">
         {/* Property Info Section */}
         <div className="flex flex-col lg:flex-row gap-5 w-full lg:w-auto">
           <Image
@@ -118,10 +115,10 @@ const ApplicationCard = ({
             </div>
           </div>
         </div>
-
-        <hr className="my-4" />
-        {children}
       </div>
+
+      <hr className="my-4" />
+      {children}
     </div>
   );
 };
