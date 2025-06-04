@@ -18,6 +18,7 @@ const LandingPayout = ({ children }: { children: React.ReactNode }) => {
         (userRole === "manager" && pathname === "/")
       ) {
         router.push("/managers/properties", { scroll: false });
+      
       } else {
         setIsLoading(false);
       }
