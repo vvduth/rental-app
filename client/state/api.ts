@@ -1,5 +1,5 @@
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
-import { Manager, Property, Tenant } from "@/types/prismaTypes";
+import { Lease, Manager, Payment, Property, Tenant } from "@/types/prismaTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
@@ -17,7 +17,14 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Tenants", "Managers", "Properties", "PropertyDetails"],
+  tagTypes: [
+    "Tenants",
+    "Managers",
+    "Properties",
+    "PropertyDetails",
+    "Leases",
+    "Payments",
+  ],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
@@ -122,7 +129,7 @@ export const api = createApi({
     getProperty: build.query<Property, number>({
       query: (id) => `properties/${id}`,
       providesTags: (result, err, id) => [{ type: "PropertyDetails", id }],
-    }),  // tenant endpoints
+    }), // tenant endpoints
     getTenant: build.query<Tenant, string>({
       query: (cognitoId) => `tenants/${cognitoId}`,
       providesTags: (result) => [{ type: "Tenants", id: result?.id }],
@@ -134,13 +141,13 @@ export const api = createApi({
     }),
     getCurrentResidences: build.query<Property[], string>({
       query: (cognitoId) => `tenants/${cognitoId}/current-residences`,
-      providesTags: (result) => 
-        result ? [
-          ...result.map(({ id }) => ({ type: "Properties" as const, id })),
-          { type: "Properties", id: "LIST" },
-        ] : [
-          { type: "Properties", id: "LIST" }
-        ],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
+              { type: "Properties", id: "LIST" },
+            ]
+          : [{ type: "Properties", id: "LIST" }],
     }),
     addFavoriteProperty: build.mutation<
       Tenant,
@@ -168,7 +175,29 @@ export const api = createApi({
         { type: "Tenants", id: result?.id },
         { type: "Properties", id: "LIST" },
       ],
-    })
+    }),
+
+    // manager endpoints
+    getManagerProperties: build.query<Property[], string>({
+      query: (cognitoId) => `managers/${cognitoId}/properties`,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
+              { type: "Properties", id: "LIST" },
+            ]
+          : [{ type: "Properties", id: "LIST" }],
+    }),
+
+    // lease related endpoints
+    getLeases: build.query<Lease[], number>({
+      query: () => `leases`,
+      providesTags: ["Leases"],
+    }),
+    getPayment: build.query<Payment, number>({
+      query: (leaseId) => `leases/${leaseId}/payment`,
+      providesTags: ["Payments"],
+    }),
   }),
 });
 
@@ -181,5 +210,8 @@ export const {
   useRemoveFavoritePropertyMutation,
   useGetTenantQuery,
   useGetPropertyQuery,
+  useGetManagerPropertiesQuery,
+  useGetLeasesQuery,
+  useGetPaymentQuery,
   useGetCurrentResidencesQuery,
 } = api;
