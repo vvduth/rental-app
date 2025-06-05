@@ -200,6 +200,7 @@ export const createProperty = async (
           Key: `properties/${Date.now()}-${file.originalname}`,
           Body: file.buffer,
           ContentType: file.mimetype,
+          ACL: 'public-read' as const,
         };
 
         const uploadResult = await new Upload({

@@ -9,13 +9,18 @@ import PropertyLocation from "./PropertyLocation";
 import ContactWidget from "./ContactWidget";
 import ApplicationModal from "./ApplicationModal";
 import { Property } from "@/types/prismaTypes";
+import Loading from "@/components/Loading";
 
 const SingleListing = () => {
   const { id } = useParams();
   const propertyId = Number(id);
   const { data: authUser } = useGetAuthUserQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const {data: propertyData } = useGetPropertyQuery(propertyId)
+  const {data: propertyData, isLoading, isError } = useGetPropertyQuery(propertyId)
+  
+  if (isLoading) return (
+    <Loading />
+  )
 
   return (
     <div>
