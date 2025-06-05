@@ -144,6 +144,16 @@ export const api = createApi({
         });
       },
     }),
+    generateUploadUrls: build.mutation<
+      { uploadUrls: Array<{ signedUrl: string; publicUrl: string; key: string; originalName: string }> },
+      Array<{ name: string; type: string; size: number }>
+    >({
+      query: (files:any) => ({
+        url: "properties/upload-urls",
+        method: "POST",
+        body: { files },
+      }),
+    }),
     getTenant: build.query<Tenant, string>({
       query: (cognitoId) => `tenants/${cognitoId}`,
       providesTags: (result) => [{ type: "Tenants", id: result?.id }],
@@ -224,7 +234,7 @@ export const api = createApi({
         });
       },
     }),
-    createProperty: build.mutation<Property, FormData>({
+    createProperty: build.mutation<Property, object>({
       query: (propertyData) => ({
         url: `properties`,
         method: "POST",
@@ -342,4 +352,5 @@ export const {
   useGetApplicationsQuery,
   useUpdateApplicationStatusMutation,
   useCreateApplicationMutation,
+  useGenerateUploadUrlsMutation
 } = api;

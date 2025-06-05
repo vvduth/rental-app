@@ -1,5 +1,5 @@
 "use client";
-import { useCreatePropertyMutation, useGetAuthUserQuery } from "@/state/api";
+import { useCreatePropertyMutation, useGenerateUploadUrlsMutation, useGetAuthUserQuery } from "@/state/api";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import { CustomFormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 const NewPropertyPage = () => {
   const [createProperty] = useCreatePropertyMutation();
+  const [generateUploadUrls] = useGenerateUploadUrlsMutation();
   const { data: authUser } = useGetAuthUserQuery();
   const form = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
@@ -36,24 +37,90 @@ const NewPropertyPage = () => {
     },
   });
 
-  const onSubmit = async (data: PropertyFormData) => {
+ 
+
+  const uploadFileToS3 = async (file: File, signedUrl: string): Promise<boolean> => {
+    try {
+      const response = await fetch(signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('Error uploading file to S3:', error);
+      return false;
+    }
+  };
+
+   const onSubmit = async (data: PropertyFormData) => {
     if (!authUser?.cognitoInfo?.userId) {
       throw new Error("User not authenticated");
     }
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "photoUrls") {
-        const files = value as File[];
-        files.forEach((file) => formData.append("photos", file));
-      } else if (Array.isArray(value)) {
-        formData.append(key, JSON.stringify(value));
-      } else {
-        formData.append(key, value.toString());
+    
+    try {
+       const files = data.photoUrls as File[];
+      
+      if (!files || files.length === 0) {
+        throw new Error("Please select at least one photo");
       }
-    });
-    formData.append("managerCognitoId", authUser.cognitoInfo.userId);
 
-    await createProperty(formData);
+      console.log('Files to upload:', files);
+
+      // Step 1: Generate signed URLs
+      const fileInfos = files.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size
+      }));
+
+      const { uploadUrls } = await generateUploadUrls(fileInfos).unwrap();
+      console.log('Generated upload URLs:', uploadUrls);
+
+      // Step 2: Upload files to S3 using signed URLs
+      const uploadPromises = files.map(async (file, index) => {
+        const uploadInfo = uploadUrls[index];
+        const success = await uploadFileToS3(file, uploadInfo.signedUrl);
+        
+        if (!success) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+        
+        return uploadInfo.publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      console.log('All files uploaded successfully:', uploadedUrls);
+
+      // Step 3: Create property with uploaded photo URLs
+      const propertyData = {
+        ...data,
+        photoUrls: uploadedUrls, // Use the public URLs
+        managerCognitoId: authUser.cognitoInfo.userId,
+        // Ensure proper data types
+        pricePerMonth: Number(data.pricePerMonth),
+        securityDeposit: Number(data.securityDeposit),
+        applicationFee: Number(data.applicationFee),
+        beds: Number(data.beds),
+        baths: Number(data.baths),
+        squareFeet: Number(data.squareFeet),
+        isPetsAllowed: Boolean(data.isPetsAllowed),
+        isParkingIncluded: Boolean(data.isParkingIncluded),
+      };
+
+      const newProperty = await createProperty(propertyData).unwrap();
+
+      console.log('Property created successfully:', newProperty);
+      
+      // Reset form or redirect
+      form.reset();
+      // router.push('/dashboard/managers/properties');
+    } catch (error) {
+      console.error('Error creating property:', error);
+    }
   };
   return (
     <div className="p-5">
