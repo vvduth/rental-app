@@ -1,3 +1,4 @@
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Request, Response } from "express";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { wktToGeoJSON } from "@terraformer/wkt";
@@ -5,6 +6,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
 import axios from "axios";
 import { Location } from "@prisma/client";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 
 
@@ -190,28 +192,36 @@ export const createProperty = async (
       country,
       postalCode,
       managerCognitoId,
+      photoUrls,
       ...propertyData
     } = req.body;
 
-    const photoUrls = await Promise.all(
-      files.map(async (file) => {
-        const uploadParams = {
-          Bucket: process.env.AWS_S3_BUCKET_NAME!,
-          Key: `properties/${Date.now()}-${file.originalname}`,
-          Body: file.buffer,
-          ContentEncoding: "base64",
-          ContentType: file.mimetype,
-        };
+    console.log('Creating property with photo URLs:', photoUrls);
 
-        const uploadResult = await new Upload({
-          client: s3Client,
-          params: uploadParams,
-        }).done();
+    // const photoUrls = await Promise.all(
+    //   files.map(async (file) => {
+    //     const uploadParams = {
+    //       Bucket: process.env.AWS_S3_BUCKET_NAME!,
+    //       Key: `properties/${Date.now()}-${file.originalname}`,
+    //       Body: file.buffer,
+    //       ContentType: file.mimetype,
+    //     };
 
-        return uploadResult.Location;
-      })
-    );
+    //     const uploadResult = await new Upload({
+    //       client: s3Client,
+    //       params: uploadParams,
+    //     }).done();
 
+    //     return uploadResult.Location;
+    //   })
+    // );
+
+    // Validate that photoUrls is provided
+    if (!photoUrls || !Array.isArray(photoUrls) || photoUrls.length === 0) {
+      res.status(400).json({
+        message: "Photo URLs are required"
+      });
+    }
 
     const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams(
       {
@@ -279,6 +289,56 @@ export const createProperty = async (
     res.status(500).json({
       message: "Error creating property" + error,
 
+    });
+  }
+};
+
+
+
+
+// Add this new function to generate signed URLs for uploads
+export const generateUploadUrls = async (req: Request, res: Response) => {
+  try {
+    const { files } = req.body; // Array of file info: [{name, type, size}]
+    
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      res.status(400).json({ message: "Files array is required" });
+    }
+
+    const uploadUrls = await Promise.all(
+      files.map(async (file: { name: string; type: string; size: number }, index: number) => {
+        // Generate unique key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 15);
+        const fileExtension = file.name.split('.').pop();
+        const key = `properties/${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
+
+        const command = new PutObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET_NAME!,
+          Key: key,
+          ContentType: file.type,
+        });
+
+        // Generate signed URL valid for 15 minutes
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+        
+        // The final public URL
+        const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+        return {
+          signedUrl,
+          publicUrl,
+          key,
+          originalName: file.name
+        };
+      })
+    );
+
+    res.json({ uploadUrls });
+  } catch (error: any) {
+    console.error("Error generating upload URLs:", error);
+    res.status(500).json({
+      message: "Error generating upload URLs: " + error.message,
     });
   }
 };
