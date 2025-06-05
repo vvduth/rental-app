@@ -1,5 +1,5 @@
 "use client";
-import { useGetAuthUserQuery } from "@/state/api";
+import { useGetAuthUserQuery, useGetPropertyQuery } from "@/state/api";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import ImagePreviews from "./ImagePreviews";
@@ -8,17 +8,19 @@ import PropertyDetails from "./PropertyDetails";
 import PropertyLocation from "./PropertyLocation";
 import ContactWidget from "./ContactWidget";
 import ApplicationModal from "./ApplicationModal";
+import { Property } from "@/types/prismaTypes";
 
 const SingleListing = () => {
   const { id } = useParams();
   const propertyId = Number(id);
   const { data: authUser } = useGetAuthUserQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const {data: propertyData } = useGetPropertyQuery(propertyId)
 
   return (
     <div>
       <ImagePreviews
-        images={["/singlelisting-2.jpg", "/singlelisting-3.jpg"]}
+        images={propertyData.imagesUrl}
       />
       <div
         className="flex flex-col md:flex-row justify-center gap-10 mx-10 md:w-2/3 md:mx-auto
