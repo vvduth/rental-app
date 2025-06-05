@@ -1,5 +1,3 @@
-import { createApplication } from './../../backend/src/controllers/applicationControllers';
-import { createProperty } from "./../../backend/src/controllers/PropertyControllers";
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
 import {
   Application,
@@ -12,7 +10,6 @@ import {
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
-import { result } from "lodash";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -34,7 +31,7 @@ export const api = createApi({
     "PropertyDetails",
     "Leases",
     "Payments",
-    "Applications"
+    "Applications",
   ],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -224,8 +221,7 @@ export const api = createApi({
         await withToast(queryFulfilled, {
           error: "Failed to fetch properties.",
         });
-      }
-       
+      },
     }),
     createProperty: build.mutation<Property, FormData>({
       query: (propertyData) => ({
@@ -308,8 +304,8 @@ export const api = createApi({
       invalidatesTags: ["Applications"],
     }),
     updateApplicationStatus: build.mutation<
-      Application & {lease?: Lease},
-      {id: number; status: string; }
+      Application & { lease?: Lease },
+      { id: number; status: string }
     >({
       query: ({ id, status }) => ({
         url: `applications/${id}/status`,
@@ -323,7 +319,7 @@ export const api = createApi({
           error: "Failed to update application status",
         });
       },
-    })
+    }),
   }),
 });
 
@@ -344,5 +340,5 @@ export const {
   useCreatePropertyMutation,
   useGetApplicationsQuery,
   useUpdateApplicationStatusMutation,
-  useCreateApplicationMutation
+  useCreateApplicationMutation,
 } = api;

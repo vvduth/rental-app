@@ -5,6 +5,10 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
 import axios from "axios";
 import { Location } from "@prisma/client";
+
+
+
+
 const prisma = new PrismaClient();
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -173,8 +177,10 @@ export const getProperty = async (req: Request, res: Response) => {
     });
   }
 };
-
-export const createProperty = async (req: Request, res: Response) => {
+export const createProperty = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const files = req.files as Express.Multer.File[];
     const {
@@ -187,22 +193,22 @@ export const createProperty = async (req: Request, res: Response) => {
       ...propertyData
     } = req.body;
 
-    // const photoUrls = await Promise.all(
-    //   files.map(async (file) => {
-    //     const uploadParams = {
-    //       Bucket: process.env.AWS_S3_BUCKET_NAME!,
-    //       Key: `properties/${Date.now()}-${file.originalname}`,
-    //       Body: file.buffer,
-    //       ContentType: file.mimetype,
-    //     };
+    const photoUrls = await Promise.all(
+      files.map(async (file) => {
+        const uploadParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME!,
+          Key: `properties/${Date.now()}-${file.originalname}`,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        };
 
-    //     const uploadResult = await new Upload({
-    //       client: s3Client,
-    //       params: uploadParams,
-    //     }).done();
-    //     return uploadResult.Location;
-    //   })
-    // );
+        const uploadResult = await new Upload({
+          client: s3Client,
+          params: uploadParams,
+        }).done();
+        return uploadResult.Location;
+      })
+    );
 
     const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams(
       {
@@ -240,7 +246,7 @@ export const createProperty = async (req: Request, res: Response) => {
     const newProperty = await prisma.property.create({
       data: {
         ...propertyData,
-        photoUrls: [],
+        photoUrls,
         locationId: location.id,
         managerCognitoId,
         amenities:

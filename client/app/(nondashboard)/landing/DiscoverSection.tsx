@@ -36,7 +36,7 @@ const DiscoverSection = () => {
                 Find your dream rental property with our easy-to-use search engine today!
             </p>
             <p className="mt-2 text-gray-500 max-w-3xl mx-auto">
-                Browse thousands of listings, compare features, and connect directly with property owners or agents. Whether you're looking for a cozy apartment, a spacious house, or a unique rental experience, our platform makes it simple and convenient to discover your next home.
+                Browse thousands of listings, compare features, and connect directly with property owners or agents. Whether you are looking for a cozy apartment, a spacious house, or a unique rental experience, our platform makes it simple and convenient to discover your next home.
             </p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 text-center">
