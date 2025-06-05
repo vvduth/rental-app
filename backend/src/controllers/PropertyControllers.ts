@@ -199,6 +199,7 @@ export const createProperty = async (
           Bucket: process.env.AWS_S3_BUCKET_NAME!,
           Key: `properties/${Date.now()}-${file.originalname}`,
           Body: file.buffer,
+          ContentEncoding: "base64",
           ContentType: file.mimetype,
         };
 
@@ -206,9 +207,11 @@ export const createProperty = async (
           client: s3Client,
           params: uploadParams,
         }).done();
+
         return uploadResult.Location;
       })
     );
+
 
     const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams(
       {
